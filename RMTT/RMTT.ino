@@ -11,7 +11,7 @@
 // SPI Pins
 #define SPI_MOSI 2
 #define SPI_MISO 5
-#define SPI_SCLK 12
+#define SPI_SCLK 4
 #define SPI_CS   21
 
 // receive buffer
