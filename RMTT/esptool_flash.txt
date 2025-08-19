@@ -1,0 +1,14 @@
+1. Find esptool.py path
+which esptool.py
+
+2. Get Chip information
+sudo /path/to/esptool.py --port <your-port> chip_id
+
+3. Erase Flash
+sudo /path/to/esptool.py --port <your-port> erase_flash
+
+4. Backup Flashed image
+sudo /path/to/esptool.py --port <your-port> read_flash 0x00000 0x400000 backup.bin
+
+5. Restore firmware form backup
+sudo /path/to/esptool.py --port <your-port> write_flash 0x00000 backup.bin 
