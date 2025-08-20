@@ -9,14 +9,18 @@
 // ESP32SPISlave by hideakitai, version: 0.6.9
 
 // SPI Pins
-#define SPI_MOSI 2
-#define SPI_MISO 5
-#define SPI_SCLK 4
-#define SPI_CS   21
+#define SPI_MOSI 21
+#define SPI_MISO 2
+#define SPI_SCLK 5
+#define SPI_CS   4
 
 // receive buffer
 uint8_t rxbuf[13];
 ESP32SPISlave slave;
+static constexpr size_t RX_LEN = 2;   // Master write: 1 byte
+static constexpr size_t TX_LEN = 2;   // Slave reply: 2 bytes (0x56, 0x78)
+uint8_t rx1[RX_LEN];
+uint8_t tx1[TX_LEN];
 
 void setup() {
   Wire.begin(27, 26);
@@ -40,13 +44,20 @@ void setup() {
 }
 
 void loop() {
-  size_t n = slave.pop(rxbuf, sizeof(rxbuf), 1000);
-  if (n == sizeof(rxbuf)){
-    uint8_t seq = rxbuf[0];
-    float x, y, z;
-    memcpy(&x, &rxbuf[1], 4);
-    memcpy(&y, &rxbuf[5], 4);
-    memcpy(&z, &rxbuf[9], 4);
-    Serial.printf("SEQ=%u  X=%.3f  Y=%.3f  Z=%.3f\n", seq, x, y, z);
+  memset(rx1, 0, RX_LEN);
+  slave.queue(nullptr, rx1, RX_LEN);
+
+  // // 2) 다음 트랜잭션으로 보낼 응답 준비 후 큐에 올림 (Master의 read에 제공)
+  tx1[0] = 0x56; 
+  tx1[1] = 0x78;
+  slave.queue(tx1, nullptr, TX_LEN);
+
+  // 3) 두 트랜잭션 완료까지 대기
+  auto res = slave.wait();
+
+  // 4) 디버그 출력
+  if (res.size() == 2) {
+    Serial.printf("Master->Slave: 0x%02X%02X\n", rx1[0], rx1[1]);
+    // Serial.println("Slave->Master: 0x5678");
   }
 }
